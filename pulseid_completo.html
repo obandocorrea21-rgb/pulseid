@@ -1,211 +1,527 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PulseID - Ficha Médica y Simulador SOS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg: #060a14;
-            --superficie: #0d1526;
-            --superficie-2: #121b31;
-            --borde: #1d2a47;
-            --texto: #e8ecf6;
-            --texto-silenciado: #7e8bae;
-            --acento: #3b6cf6;
-            --acento-dim: #16224a;
-            --critico: #f43f5e;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseID · Ficha Médica y Simulador SOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#060a14; --surface:#0d1526; --surface-2:#121b31;
+    --border:#1d2a47; --text:#e8ecf6; --text-muted:#7e8bae;
+    --accent:#3b6cf6; --accent-dim:#16224a;
+    --amb:#34d399; --pol:#60a5fa; --fire:#fb7185; --fam:#a78bfa;
+    --crit:#f43f5e;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; background:radial-gradient(ellipse 900px 500px at 15% -10%, #10203f 0%, transparent 60%), var(--bg);
+    color:var(--text); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand{font-family:'Space Grotesk', sans-serif;}
+  .shell{max-width:960px;margin:0 auto;padding:0 20px 64px;}
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--border);margin-bottom:36px;flex-wrap:wrap;gap:15px;}
+  .brand{font-size:19px;font-weight:700;display:flex;align-items:center;gap:10px;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-dim);}
+  .status-pill{font-size:13px;color:var(--text-muted);border:1px solid var(--border);border-radius:99px;padding:6px 14px;display:flex;align-items:center;gap:8px;}
+  .status-pill .led{width:7px;height:7px;border-radius:50%;background:var(--amb);}
 
-        body {
-            margin: 0;
-            background: radial-gradient(ellipse 900px 500px at 15% -10%, #10203f 0%, transparent 60%), var(--bg);
-            background-color: var(--bg);
-            color: var(--texto);
-            font-family: 'IBM Plex Sans', sans-serif;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            padding: 20px;
-        }
+  .hero{display:grid;grid-template-columns:1.3fr 1fr;gap:0;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--surface);margin-bottom:40px;}
+  .hero-profile{padding:32px;border-right:1px solid var(--border);display:flex;gap:20px;align-items:center;}
+  .photo-ph{width:80px;height:80px;border-radius:50%;background:var(--surface-2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-muted);flex-shrink:0;}
+  .hero-info{flex:1;}
+  .hero-info .label{font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+  .hero-info h1{font-size:28px;margin:0 0 4px;}
+  .hero-info .sub{color:var(--text-muted);font-size:14px;margin-bottom:16px;}
+  .badge-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .badge{background:var(--accent-dim);border:1px solid #24356b;color:#b9c8ff;font-size:13px;padding:6px 12px;border-radius:8px;font-weight:500;}
+  .badge.blood{background:#2a1420;border-color:#4a1f30;color:#ffb4c4;}
+  .badge.crit{background:#301316;border-color:#5a1f26;color:var(--crit);}
 
-        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; margin: 0 0 15px 0; }
-        
-        .contenedor {
-            max-width: 600px;
-            margin: 0 auto;
-        }
+  .hero-qr{padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface-2);text-align:center;}
+  #qrcode{background:#fff;padding:10px;border-radius:10px;display:inline-block;}
+  .hero-qr p{font-size:12.5px;color:var(--text-muted);margin:14px 0 0;max-width:220px;}
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 { color: var(--acento); }
+  section.block{margin-bottom:40px;}
+  section.block h2{font-size:18px;margin:0 0 16px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:10px;}
+  
+  .section-title{font-size:14px;color:var(--text-muted);margin:24px 0 12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+  .record-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .record-card{border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:16px;position:relative;}
+  .record-card.full{grid-column:1/-1;}
+  .record-card.half{grid-column:span 2;}
+  .record-card .k{font-size:12px;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .record-card .v{font-size:14px;font-weight:500;}
+  .record-card.critical{border-color:rgba(244, 63, 94, 0.4);background:rgba(244, 63, 94, 0.05);}
+  .icon-alert{color:var(--crit);font-size:14px;}
 
-        .tarjeta {
-            background: var(--superficie);
-            border: 1px solid var(--borde);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
+  form.edit-form{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:26px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  form.edit-form h3{grid-column:1/-1;font-size:15px;margin:10px 0 4px;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:8px;}
+  form.edit-form .full{grid-column:1/-1;}
+  form.edit-form label{display:block;font-size:12.5px;color:var(--text-muted);margin-bottom:6px;}
+  form.edit-form input, form.edit-form select, form.edit-form textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;
+  }
+  form.edit-form input:focus, form.edit-form select:focus, form.edit-form textarea:focus{outline:none;border-color:var(--accent);}
+  .save-btn{grid-column:1/-1;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;}
+  .save-msg{grid-column:1/-1;font-size:13px;color:var(--amb);text-align:center;min-height:18px;}
 
-        .dato-grupo { margin-bottom: 15px; }
-        .dato-label { 
-            color: var(--texto-silenciado); 
-            font-size: 0.85em; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px; 
-            display: block;
-        }
-        .dato-valor { 
-            font-size: 1.1em; 
-            font-weight: 500; 
-            min-height: 24px;
-        }
+  /* Simulador Botón SOS */
+  .btn-panel{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:26px;display:flex;flex-direction:column;align-items:center;}
+  .btn-wrap{position:relative;width:200px;height:200px;margin:10px 0 24px;}
+  .btn-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--ring-color, var(--accent)) calc(var(--pct,0)*1%), var(--surface-2) 0);transition:background 0.05s linear;}
+  .btn-core{position:absolute;inset:10px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
+  .btn-core .icon{font-size:28px;margin-bottom:6px;}
+  .btn-core .lbl{font-size:13px;color:var(--text-muted);text-align:center;padding:0 20px;}
+  .btn-core .timer{font-size:24px;font-weight:700;display:none;font-family:'Space Grotesk',sans-serif;}
+  
+  .zones{display:flex;gap:6px;width:100%;max-width:480px;margin-bottom:12px;}
+  .zone{flex:1;border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;color:var(--text-muted);transition:0.2s;}
+  .zone .n{display:block;font-size:12px;font-weight:600;margin-bottom:2px;}
+  .zone.amb.active{border-color:var(--amb);color:var(--amb);background:rgba(52,211,153,0.1);}
+  .zone.pol.active{border-color:var(--pol);color:var(--pol);background:rgba(96,165,250,0.1);}
+  .zone.fire.active{border-color:var(--fire);color:var(--fire);background:rgba(251,113,133,0.1);}
+  .zone.fam.active{border-color:var(--fam);color:var(--fam);background:rgba(167,139,250,0.1);}
+  
+  .press-result{width:100%;max-width:480px;border-radius:10px;padding:12px 14px;font-size:13px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);text-align:center;min-height:44px;}
+  .press-result.ok{color:var(--text);border-color:var(--ring-color, var(--accent));}
 
-        /* Botones */
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-top: 10px;
-            transition: opacity 0.2s;
-        }
+  /* Log de Alertas */
+  .alert-current{border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:20px 22px;margin-bottom:14px;display:flex;align-items:center;gap:16px;}
+  .alert-current .ring{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border);font-size:18px;}
+  .alert-current .txt .k{font-size:12px;color:var(--text-muted);}
+  .alert-current .txt .v{font-size:15px;font-weight:600;}
+  .alert-log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .alert-log li{border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-muted);background:var(--surface);}
+  .alert-log li span.type{color:var(--text);font-weight:500;display:flex;align-items:center;gap:8px;}
+  .tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;}
+  .tag.amb{background:#0d2a20;color:var(--amb);}
+  .tag.pol{background:#0d1e33;color:var(--pol);}
+  .tag.fire{background:#301316;color:var(--fire);}
+  .tag.fam{background:#23193d;color:var(--fam);}
+  .empty{color:var(--text-muted);font-size:13.5px;border:1px dashed var(--border);border-radius:12px;padding:18px;text-align:center;}
+  .reset-link{background:none;border:none;color:var(--text-muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;}
 
-        .btn:hover { opacity: 0.9; }
-
-        .btn-editar {
-            background-color: var(--acento);
-            color: white;
-        }
-
-        .btn-sos {
-            background-color: var(--critico);
-            color: white;
-            font-size: 1.3em;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
-        }
-
-        /* Estilo cuando el texto es editable */
-        .editable-activo {
-            border: 1px dashed var(--acento);
-            padding: 5px;
-            background-color: var(--superficie-2);
-            border-radius: 4px;
-            outline: none;
-        }
-    </style>
+  @media (max-width:768px){ .record-grid{grid-template-columns:1fr 1fr;} .hero-profile{flex-direction:column;text-align:center;}}
+  @media (max-width:640px){ .hero{grid-template-columns:1fr;} .hero-profile{border-right:none;border-bottom:1px solid var(--border);} .record-grid, form.edit-form{grid-template-columns:1fr;} .badge-row{justify-content:center;}}
+</style>
 </head>
 <body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>PulseID · Salud & Emergencias</div>
+    <div class="status-pill"><span class="led"></span>Sistema Conectado</div>
+  </div>
 
-    <div class="contenedor">
-        <div class="header">
-            <h1>PulseID</h1>
-            <p>Ficha Médica de Emergencia</p>
+  <section class="hero">
+    <div class="hero-profile">
+      <div class="photo-ph" id="pPhoto">👤</div>
+      <div class="hero-info">
+        <div class="label">Perfil registrado</div>
+        <h1 id="pName">Cargando…</h1>
+        <div class="sub" id="pSub">—</div>
+        <div class="badge-row">
+          <span class="badge blood" id="pBlood">—</span>
+          <span class="badge crit" id="pAllergyBadge">—</span>
+          <span class="badge" id="pInsBadge">—</span>
         </div>
+      </div>
+    </div>
+    <div class="hero-qr">
+      <div id="qrcode"></div>
+      <p>Escaneo rápido para paramédicos y urgencias.</p>
+    </div>
+  </section>
 
-        <div class="tarjeta">
-            <h2>Datos del Paciente</h2>
-            
-            <div class="dato-grupo">
-                <span class="dato-label">Nombre Completo</span>
-                <div id="nombrePaciente" class="dato-valor dato-editable">Cristian Obando</div>
-            </div>
-            
-            <div class="dato-grupo">
-                <span class="dato-label">Tipo de Sangre</span>
-                <div id="tipoSangre" class="dato-valor dato-editable">O+</div>
-            </div>
-
-            <div class="dato-grupo">
-                <span class="dato-label">Alergias</span>
-                <div id="alergias" class="dato-valor dato-editable">Ninguna</div>
-            </div>
-
-            <div class="dato-grupo">
-                <span class="dato-label">Condiciones Médicas</span>
-                <div id="condicion" class="dato-valor dato-editable">Ninguna</div>
-            </div>
-
-            <button id="btnEditar" class="btn btn-editar" onclick="gestionarEdicion()">Editar Datos</button>
-        </div>
-
-        <button id="btnSos" class="btn btn-sos">🆘 ALERTA SOS (Mantener)</button>
+  <section class="block">
+    <h2>Ficha Médica de Emergencia</h2>
+    
+    <div class="section-title">Información Crítica (Vital)</div>
+    <div class="record-grid">
+      <div class="record-card critical"><div class="k"><span class="icon-alert">⚠</span> Tipo de Sangre</div><div class="v" id="rBlood">—</div></div>
+      <div class="record-card critical half"><div class="k"><span class="icon-alert">⚠</span> Alergias (Medicamentos/Alimentos)</div><div class="v" id="rAllergies">—</div></div>
+      <div class="record-card critical full"><div class="k"><span class="icon-alert">⚠</span> Condiciones Médicas Crónicas</div><div class="v" id="rConditions">—</div></div>
+      <div class="record-card critical full"><div class="k"><span class="icon-alert">⚠</span> Medicación Actual (Dosis)</div><div class="v" id="rMeds">—</div></div>
+      <div class="record-card critical full"><div class="k"><span class="icon-alert">⚠</span> Dispositivos Médicos Implantados</div><div class="v" id="rDevices">—</div></div>
     </div>
 
-    <script>
-        // --- LÓGICA DE CONTRASEÑA ---
-        let modoEdicion = false;
+    <div class="section-title">Contactos de Emergencia</div>
+    <div class="record-grid">
+      <div class="record-card half"><div class="k">Contacto Principal</div><div class="v" id="rC1">—</div></div>
+      <div class="record-card"><div class="k">Teléfono 1</div><div class="v" id="rC1Tel">—</div></div>
+      <div class="record-card half"><div class="k">Contacto de Respaldo</div><div class="v" id="rC2">—</div></div>
+      <div class="record-card"><div class="k">Teléfono 2</div><div class="v" id="rC2Tel">—</div></div>
+    </div>
 
-        function gestionarEdicion() {
-            let btn = document.getElementById("btnEditar");
-            let elementosEditables = document.querySelectorAll('.dato-editable');
+    <div class="section-title">Información Adicional (Útil)</div>
+    <div class="record-grid">
+      <div class="record-card"><div class="k">Embarazo</div><div class="v" id="rPreg">—</div></div>
+      <div class="record-card half"><div class="k">Última cirugía relevante</div><div class="v" id="rSurg">—</div></div>
+      <div class="record-card"><div class="k">Idioma preferido</div><div class="v" id="rLang">—</div></div>
+      <div class="record-card half"><div class="k">Previsión / Seguro Médico</div><div class="v" id="rIns">—</div></div>
+    </div>
+  </section>
 
-            if (!modoEdicion) {
-                let contrasena = prompt("Por favor, ingrese la contraseña para modificar la ficha:");
-                
-                if (contrasena === "usuario1") {
-                    modoEdicion = true;
-                    
-                    elementosEditables.forEach(el => {
-                        el.setAttribute('contenteditable', 'true');
-                        el.classList.add('editable-activo');
-                    });
-                    
-                    btn.innerText = "💾 Guardar Cambios";
-                    btn.style.backgroundColor = "#10b981"; // Cambia a verde
-                } else if (contrasena !== null) {
-                    alert("Contraseña incorrecta. Acceso denegado.");
-                }
-            } else {
-                modoEdicion = false;
-                
-                elementosEditables.forEach(el => {
-                    el.setAttribute('contenteditable', 'false');
-                    el.classList.remove('editable-activo');
-                });
-                
-                btn.innerText = "Editar Datos";
-                btn.style.backgroundColor = "var(--acento)";
-                alert("Cambios guardados en la vista actual exitosamente.");
-            }
-        }
+  <section class="block">
+    <h2>Editar Perfil</h2>
+    <form class="edit-form" id="editForm">
+      <h3>1. Identificación Básica</h3>
+      <div class="full"><label>Nombre completo</label><input id="fName" required></div>
+      <div><label>Fecha de nacimiento / Edad</label><input id="fDob" placeholder="Ej: 24 años"></div>
+      <div><label>URL de Foto (Opcional)</label><input id="fPhoto" placeholder="https://..."></div>
 
-        // --- LÓGICA DEL BOTÓN SOS ---
-        let btnSos = document.getElementById('btnSos');
-        let timer;
-        
-        // Mantiene presionado (PC)
-        btnSos.addEventListener('mousedown', () => {
-            timer = setTimeout(() => {
-                alert("🚨 ALERTA ROJA ENVIADA: Mensaje de emergencia y ubicación compartida con contactos.");
-            }, 1500); 
-        });
-        btnSos.addEventListener('mouseup', () => clearTimeout(timer));
-        btnSos.addEventListener('mouseleave', () => clearTimeout(timer));
+      <h3>2. Información Crítica</h3>
+      <div><label>Tipo de Sangre</label><input id="fBlood" placeholder="O+, A-, etc."></div>
+      <div><label>Dispositivos Implantados</label><input id="fDevices" placeholder="Marcapasos, Stent, Ninguno"></div>
+      <div class="full"><label>Alergias Graves</label><input id="fAllergies" placeholder="Penicilina, Aspirina, Ninguna"></div>
+      <div class="full"><label>Condiciones Crónicas</label><textarea id="fConditions" rows="2" placeholder="Diabetes, Hipertensión..."></textarea></div>
+      <div class="full"><label>Medicación Actual</label><textarea id="fMeds" rows="2" placeholder="Insulina, Anticoagulantes..."></textarea></div>
 
-        // Mantiene presionado (Celular)
-        btnSos.addEventListener('touchstart', (e) => {
-            timer = setTimeout(() => {
-                alert("🚨 ALERTA ROJA ENVIADA: Mensaje de emergencia y ubicación compartida con contactos.");
-            }, 1500);
-        });
-        btnSos.addEventListener('touchend', () => clearTimeout(timer));
-    </script>
+      <h3>3. Contactos de Emergencia</h3>
+      <div><label>Nombre y Relación (Contacto 1)</label><input id="fC1" placeholder="María (Madre)"></div>
+      <div><label>Teléfono 1</label><input id="fC1Tel" placeholder="+56 9..."></div>
+      <div><label>Nombre y Relación (Contacto 2)</label><input id="fC2" placeholder="Juan (Pareja)"></div>
+      <div><label>Teléfono 2</label><input id="fC2Tel" placeholder="+56 9..."></div>
+
+      <h3>4. Información Adicional</h3>
+      <div><label>Previsión / Seguro de Salud</label><input id="fIns" placeholder="Fonasa, Isapre..."></div>
+      <div><label>Idioma Preferido</label><input id="fLang" placeholder="Español, Inglés..."></div>
+      <div><label>¿Embarazo actual?</label>
+        <select id="fPreg">
+          <option value="No">No</option>
+          <option value="Sí">Sí</option>
+          <option value="No aplica">No aplica</option>
+        </select>
+      </div>
+      <div><label>Última Cirugía Relevante</label><input id="fSurg" placeholder="Ninguna"></div>
+
+      <!-- SECCIÓN DE AUTORIZACIÓN AÑADIDA -->
+      <h3>5. Seguridad</h3>
+      <div class="full">
+        <label>Clave de autorización (Requerida para guardar cambios)</label>
+        <input type="password" id="authPin" placeholder="Introduce la clave (por defecto: 1234)" required>
+      </div>
+
+      <button class="save-btn" type="submit">Guardar Ficha Médica</button>
+      <div class="save-msg" id="saveMsg"></div>
+    </form>
+  </section>
+
+  <!-- Simulador Botón SOS integrado -->
+  <section class="block">
+    <h2>Simulador de Pulsera SOS</h2>
+    <div class="btn-panel">
+      <div class="btn-wrap">
+        <div class="btn-ring" id="ring"></div>
+        <div class="btn-core" id="btnCore">
+          <span class="icon" id="btnIcon">◉</span>
+          <span class="lbl" id="btnLbl">Toca o mantén</span>
+          <span class="timer" id="btnTimer">0.0s</span>
+        </div>
+      </div>
+      <div class="zones">
+        <div class="zone amb" id="zoneAmb"><span class="n">1 Toque</span>131 SAMU</div>
+        <div class="zone pol" id="zonePol"><span class="n">2 Toques</span>132 Bomberos</div>
+        <div class="zone fire" id="zoneFire"><span class="n">3 Toques</span>133 Carabineros</div>
+        <div class="zone fam" id="zoneFam"><span class="n">Mantener 1s</span>Familiar</div>
+      </div>
+      <div class="press-result" id="pressResult">Haz 1, 2 o 3 toques para emergencias o mantén 1s para familiar.</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Historial de Alertas de la Pulsera</h2>
+    <div class="alert-current" id="alertCurrent">
+      <div class="ring">–</div>
+      <div class="txt"><div class="k">Estado</div><div class="v">Sin alertas activas</div></div>
+    </div>
+    <ul class="alert-log" id="alertLog"></ul>
+    <div style="margin-top:10px;"><button class="reset-link" id="resetBtn">Borrar historial de alertas</button></div>
+  </section>
+</div>
+
+<script>
+const STORE_PROFILE = 'pulseid:ficha_completa';
+const STORE_ALERTS = 'pulseid:alertas_activas';
+const DEFAULT_PIN = '1234'; // CLAVE POR DEFECTO PARA MODIFICAR
+
+const defaultProfile = {
+  name: 'Inaís Quintero',
+  dob: '24 años',
+  photo: '',
+  blood: 'O+',
+  devices: 'Ninguno',
+  allergies: 'Ninguna conocida',
+  conditions: 'Ninguna',
+  meds: 'Ninguna',
+  c1: 'Familiar Directo',
+  c1Tel: '+56 9 1234 5678',
+  c2: '',
+  c2Tel: '',
+  ins: 'Fonasa Tramo C',
+  lang: 'Español',
+  preg: 'No',
+  surg: 'Ninguna'
+};
+
+let qrInstance = null;
+
+function renderQR(p){
+  const el = document.getElementById('qrcode');
+  el.innerHTML = '';
+  const payload = `EMERGENCIA PULSEID\nNombre: ${p.name}\nSangre: ${p.blood}\nAlergias: ${p.allergies}\nContacto: ${p.c1} (${p.c1Tel})`;
+  qrInstance = new QRCode(el, { text: payload, width: 130, height: 130, colorDark: '#060a14', colorLight: '#ffffff' });
+}
+
+function renderProfile(p){
+  document.getElementById('pName').textContent = p.name;
+  document.getElementById('pSub').textContent = p.dob;
+  document.getElementById('pBlood').textContent = 'Sangre: ' + (p.blood || '—');
+  document.getElementById('pAllergyBadge').textContent = (p.allergies && p.allergies.toLowerCase() !== 'ninguna') ? 'Alergias: ' + p.allergies : 'Sin alergias';
+  document.getElementById('pInsBadge').textContent = p.ins || 'Sin previsión';
+  
+  if(p.photo) {
+    document.getElementById('pPhoto').innerHTML = `<img src="${p.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+  } else {
+    document.getElementById('pPhoto').innerHTML = '👤';
+  }
+
+  document.getElementById('rBlood').textContent = p.blood || '—';
+  document.getElementById('rAllergies').textContent = p.allergies || '—';
+  document.getElementById('rConditions').textContent = p.conditions || '—';
+  document.getElementById('rMeds').textContent = p.meds || '—';
+  document.getElementById('rDevices').textContent = p.devices || '—';
+  
+  document.getElementById('rC1').textContent = p.c1 || '—';
+  document.getElementById('rC1Tel').textContent = p.c1Tel || '—';
+  document.getElementById('rC2').textContent = p.c2 || '—';
+  document.getElementById('rC2Tel').textContent = p.c2Tel || '—';
+
+  document.getElementById('rPreg').textContent = p.preg || '—';
+  document.getElementById('rSurg').textContent = p.surg || '—';
+  document.getElementById('rLang').textContent = p.lang || '—';
+  document.getElementById('rIns').textContent = p.ins || '—';
+
+  document.getElementById('fName').value = p.name || '';
+  document.getElementById('fDob').value = p.dob || '';
+  document.getElementById('fPhoto').value = p.photo || '';
+  document.getElementById('fBlood').value = p.blood || '';
+  document.getElementById('fDevices').value = p.devices || '';
+  document.getElementById('fAllergies').value = p.allergies || '';
+  document.getElementById('fConditions').value = p.conditions || '';
+  document.getElementById('fMeds').value = p.meds || '';
+  document.getElementById('fC1').value = p.c1 || '';
+  document.getElementById('fC1Tel').value = p.c1Tel || '';
+  document.getElementById('fC2').value = p.c2 || '';
+  document.getElementById('fC2Tel').value = p.c2Tel || '';
+  document.getElementById('fIns').value = p.ins || '';
+  document.getElementById('fLang').value = p.lang || '';
+  document.getElementById('fPreg').value = p.preg || 'No';
+  document.getElementById('fSurg').value = p.surg || '';
+
+  renderQR(p);
+}
+
+function loadProfile(){
+  const saved = localStorage.getItem(STORE_PROFILE);
+  const p = saved ? JSON.parse(saved) : defaultProfile;
+  if(!saved) localStorage.setItem(STORE_PROFILE, JSON.stringify(defaultProfile));
+  renderProfile(p);
+}
+
+document.getElementById('editForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('saveMsg');
+
+  // LÓGICA DE VALIDACIÓN DE CLAVE
+  const pinInput = document.getElementById('authPin');
+  if(pinInput.value !== DEFAULT_PIN) {
+    msg.style.color = 'var(--crit)';
+    msg.textContent = '❌ Clave incorrecta. No tienes permiso para modificar.';
+    setTimeout(() => { msg.textContent = ''; msg.style.color = 'var(--amb)'; }, 3000);
+    return;
+  }
+
+  const p = {
+    name: document.getElementById('fName').value,
+    dob: document.getElementById('fDob').value,
+    photo: document.getElementById('fPhoto').value,
+    blood: document.getElementById('fBlood').value,
+    devices: document.getElementById('fDevices').value,
+    allergies: document.getElementById('fAllergies').value,
+    conditions: document.getElementById('fConditions').value,
+    meds: document.getElementById('fMeds').value,
+    c1: document.getElementById('fC1').value,
+    c1Tel: document.getElementById('fC1Tel').value,
+    c2: document.getElementById('fC2').value,
+    c2Tel: document.getElementById('fC2Tel').value,
+    ins: document.getElementById('fIns').value,
+    lang: document.getElementById('fLang').value,
+    preg: document.getElementById('fPreg').value,
+    surg: document.getElementById('fSurg').value
+  };
+  localStorage.setItem(STORE_PROFILE, JSON.stringify(p));
+  renderProfile(p);
+  
+  // Limpiar el campo de la clave tras el éxito y mostrar mensaje
+  pinInput.value = '';
+  msg.style.color = 'var(--amb)';
+  msg.textContent = '¡Ficha médica y QR actualizados con éxito!';
+  setTimeout(()=>msg.textContent='', 3000);
+});
+
+// --- Lógica de Alertas y Simulador de Botón SOS ---
+const typeMeta = {
+  ambulancia: { label: '131 – SAMU (Ambulancia)', tag: 'amb', icon: '✚', color: 'var(--amb)' },
+  bomberos: { label: '132 – Bomberos', tag: 'pol', icon: '▲', color: 'var(--fire)' },
+  carabineros: { label: '133 – Carabineros', tag: 'fire', icon: '⛨', color: 'var(--pol)' },
+  familiar: { label: 'Familiar de Emergencia', tag: 'fam', icon: '☎', color: 'var(--fam)' }
+};
+
+function timeAgo(ts){
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'hace ' + s + ' s';
+  const m = Math.floor(s/60);
+  if(m<60) return 'hace ' + m + ' min';
+  return 'hace ' + Math.floor(m/60) + ' h';
+}
+
+function loadAlerts(){
+  const saved = localStorage.getItem(STORE_ALERTS);
+  renderAlerts(saved ? JSON.parse(saved) : []);
+}
+
+function renderAlerts(list){
+  const cur = document.getElementById('alertCurrent');
+  const log = document.getElementById('alertLog');
+  if(!list.length){
+    cur.innerHTML = `<div class="ring">–</div><div class="txt"><div class="k">Estado</div><div class="v">Sin alertas activas</div></div>`;
+    log.innerHTML = `<li class="empty">No se han registrado emergencias desde la pulsera.</li>`;
+    return;
+  }
+  const last = list[list.length-1];
+  const meta = typeMeta[last.type] || { label: last.type, tag: 'amb', icon: '•', color: 'var(--accent)' };
+  cur.innerHTML = `<div class="ring" style="color:${meta.color}; border-color:${meta.color}">${meta.icon}</div>
+                   <div class="txt"><div class="k">Última alerta · ${timeAgo(last.ts)}</div><div class="v">${meta.label} alertado</div></div>`;
+
+  log.innerHTML = list.slice().reverse().map(a => {
+    const m = typeMeta[a.type] || { label: a.type, tag: 'amb', icon: '•', color: 'var(--accent)' };
+    return `<li><span class="type">${m.icon} Alerta enviada → <span class="tag ${m.tag}">${m.label}</span></span><span>${timeAgo(a.ts)}</span></li>`;
+  }).join('');
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  localStorage.setItem(STORE_ALERTS, JSON.stringify([]));
+  loadAlerts();
+});
+
+let holdStart = null, holdTimer = null;
+let clickCount = 0, clickTimeout = null;
+const HOLD_LIMIT = 1000; 
+const CLICK_DELAY = 400;  
+
+const core = document.getElementById('btnCore'), ring = document.getElementById('ring'), 
+lbl = document.getElementById('btnLbl'), icon = document.getElementById('btnIcon'), 
+timerEl = document.getElementById('btnTimer'), result = document.getElementById('pressResult');
+
+function updateZoneHighlights(t){
+  document.getElementById('zoneAmb').classList.toggle('active', t==='ambulancia');
+  document.getElementById('zonePol').classList.toggle('active', t==='bomberos');
+  document.getElementById('zoneFire').classList.toggle('active', t==='carabineros');
+  document.getElementById('zoneFam').classList.toggle('active', t==='familiar');
+}
+
+function triggerAlert(t){
+  const meta = typeMeta[t];
+  result.innerHTML = `Alerta despachada a <strong>${meta.label}</strong>.`;
+  result.classList.add('ok');
+  ring.style.setProperty('--ring-color', meta.color);
+
+  const saved = localStorage.getItem(STORE_ALERTS);
+  const list = saved ? JSON.parse(saved) : [];
+  list.push({ type: t, ts: Date.now() });
+  localStorage.setItem(STORE_ALERTS, JSON.stringify(list));
+  loadAlerts();
+
+  setTimeout(() => {
+    ring.style.removeProperty('--ring-color');
+    ring.style.setProperty('--pct', 0);
+  }, 1500);
+}
+
+function startHold(e){
+  if(e) e.preventDefault();
+  holdStart = Date.now();
+  lbl.style.display = 'none'; 
+  timerEl.style.display = 'block';
+  icon.textContent = '●'; 
+  result.textContent = 'Manteniendo para familiar...'; 
+  result.classList.remove('ok');
+  
+  holdTimer = setInterval(()=>{
+    const elapsed = Date.now() - holdStart;
+    const sec = elapsed / 1000;
+    ring.style.setProperty('--pct', Math.min(sec, 1)*100);
+    timerEl.textContent = sec.toFixed(1)+'s';
+    
+    if(elapsed >= HOLD_LIMIT){
+      ring.style.setProperty('--ring-color', typeMeta.familiar.color);
+      timerEl.style.color = typeMeta.familiar.color;
+      updateZoneHighlights('familiar');
+    }
+  }, 50);
+}
+
+function endHold(e){
+  if(e) e.preventDefault();
+  if(!holdStart) return;
+  clearInterval(holdTimer);
+  const elapsed = Date.now() - holdStart;
+  holdStart = null;
+  
+  lbl.style.display = 'block'; 
+  timerEl.style.display = 'none'; 
+  icon.textContent = '◉';
+  ring.style.setProperty('--pct', 0); 
+  ring.style.removeProperty('--ring-color'); 
+  timerEl.style.color = '';
+  updateZoneHighlights(null);
+
+  if(elapsed >= HOLD_LIMIT){
+    triggerAlert('familiar');
+    clickCount = 0;
+    if(clickTimeout) clearTimeout(clickTimeout);
+  } else {
+    clickCount++;
+    if(clickTimeout) clearTimeout(clickTimeout);
+
+    clickTimeout = setTimeout(() => {
+      if(clickCount === 1){
+        triggerAlert('ambulancia'); 
+      } else if(clickCount === 2){
+        triggerAlert('bomberos');   
+      } else if(clickCount >= 3){
+        triggerAlert('carabineros'); 
+      }
+      clickCount = 0;
+    }, CLICK_DELAY);
+  }
+}
+
+core.addEventListener('mousedown', startHold); 
+core.addEventListener('mouseup', endHold); 
+core.addEventListener('mouseleave', () => { if(holdStart) endHold(); });
+core.addEventListener('touchstart', startHold, {passive:false}); 
+core.addEventListener('touchend', endHold, {passive:false});
+
+// Inicialización de la página
+loadProfile();
+loadAlerts();
+</script>
 </body>
 </html>
